@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Station Locator</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Maps API - Add your API key here later -->
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script> -->
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>⚡ EV Charging Station Locator</h1>
+            <p>Find, Book & Pay for Electric Vehicle Charging</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel: Map -->
+            <div class="map-section">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button id="locateBtn" class="btn btn-primary">📍 Find My Location</button>
+                    <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh Stations</button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Station Details & Booking -->
+            <div class="sidebar">
+                <!-- Search Section -->
+                <div class="search-section">
+                    <h3>Search Stations</h3>
+                    <input type="text" id="searchInput" placeholder="Search by address or station name" class="search-input">
+                    <div class="filter-group">
+                        <label>
+                            <input type="checkbox" id="availableFilter" checked>
+                            Available Only
+                        </label>
+                        <label>
+                            <input type="checkbox" id="fastChargeFilter">
+                            Fast Charge Only
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stations List -->
+                <div class="stations-list-section">
+                    <h3>Nearby Stations</h3>
+                    <div id="stationsList" class="stations-list"></div>
+                </div>
+
+                <!-- Station Details (Hidden by default) -->
+                <div id="stationDetails" class="station-details" style="display: none;">
+                    <button id="closeDetailsBtn" class="close-btn">✕</button>
+                    <h3 id="stationName"></h3>
+                    
+                    <div class="station-info">
+                        <p><strong>Address:</strong> <span id="stationAddress"></span></p>
+                        <p><strong>Distance:</strong> <span id="stationDistance"></span></p>
+                        <p><strong>Phone:</strong> <span id="stationPhone"></span></p>
+                        
+                        <div class="availability-grid">
+                            <div class="availability-item">
+                                <span class="label">Available:</span>
+                                <span id="availableCount" class="value available">0</span>
+                            </div>
+                            <div class="availability-item">
+                                <span class="label">In Use:</span>
+                                <span id="inUseCount" class="value in-use">0</span>
+                            </div>
+                            <div class="availability-item">
+                                <span class="label">Maintenance:</span>
+                                <span id="maintenanceCount" class="value maintenance">0</span>
+                            </div>
+                            <div class="availability-item">
+                                <span class="label">Occupied:</span>
+                                <span id="occupiedCount" class="value occupied">0</span>
+                            </div>
+                        </div>
+
+                        <div class="charger-types">
+                            <h4>Charger Types:</h4>
+                            <div id="chargersList"></div>
+                        </div>
+
+                        <div class="pricing">
+                            <h4>Pricing</h4>
+                            <p>Per kWh: $<span id="pricePerKwh">0.35</span></p>
+                            <p>Base Fee: $<span id="baseFee">2.00</span></p>
+                        </div>
+
+                        <div class="booking-section">
+                            <h4>Book Charging Slot</h4>
+                            <div class="form-group">
+                                <label for="chargerSelect">Select Charger:</label>
+                                <select id="chargerSelect" class="form-control">
+                                    <option>Choose charger</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="startTime">Start Time:</label>
+                                <input type="datetime-local" id="startTime" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="duration">Duration (Hours):</label>
+                                <input type="number" id="duration" min="0.5" step="0.5" value="1" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleType">Vehicle Type:</label>
+                                <select id="vehicleType" class="form-control">
+                                    <option value="sedan">Sedan</option>
+                                    <option value="suv">SUV</option>
+                                    <option value="truck">Truck</option>
+                                </select>
+                            </div>
+
+                            <div class="estimated-cost">
+                                <p>Estimated Cost: $<span id="estimatedCost">0.00</span></p>
+                            </div>
+
+                            <button id="bookBtn" class="btn btn-success btn-full">📅 Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Section (Hidden by default) -->
+                <div id="paymentSection" class="payment-section" style="display: none;">
+                    <button id="backToDetailsBtn" class="close-btn">← Back</button>
+                    <h3>Payment Details</h3>
+                    
+                    <div class="payment-summary">
+                        <p><strong>Station:</strong> <span id="paymentStation"></span></p>
+                        <p><strong>Booking ID:</strong> <span id="bookingId"></span></p>
+                        <p><strong>Date & Time:</strong> <span id="paymentDateTime"></span></p>
+                        <p><strong>Duration:</strong> <span id="paymentDuration"></span> hours</p>
+                        <p><strong>Charger Type:</strong> <span id="paymentCharger"></span></p>
+                    </div>
+
+                    <div class="cost-breakdown">
+                        <h4>Cost Breakdown</h4>
+                        <div class="cost-item">
+                            <span>Base Fee:</span>
+                            <span>$<span id="costBase">2.00</span></span>
+                        </div>
+                        <div class="cost-item">
+                            <span>Charging Cost:</span>
+                            <span>$<span id="costCharging">0.00</span></span>
+                        </div>
+                        <div class="cost-item total">
+                            <span>Total Amount:</span>
+                            <span>$<span id="totalAmount">0.00</span></span>
+                        </div>
+                    </div>
+
+                    <div id="qrPaymentSection" class="qr-payment-section" style="display: none;">
+                        <div class="qr-code-container">
+                            <h4>Pay via QR Code</h4>
+                            <div class="qr-code">
+                                <img id="qrImage" src="" alt="QR Code" style="width: 220px; height:220px; object-fit: cover;" />
+                            </div>
+                            <div class="qr-instructions">
+                                <p id="qrInstruction">Scan this QR code to pay.</p>
+                                <p class="qr-amount">$<span id="qrAmount">0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-method">
+                        <h4>Payment Method</h4>
+                        <div class="payment-options">
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <span>💳 Credit/Debit Card</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="wallet">
+                                <span>💰 Digital Wallet</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="bank">
+                                <span>🏦 Bank Transfer</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="cardDetails" class="card-details">
+                        <div class="form-group">
+                            <label for="cardName">Cardholder Name:</label>
+                            <input type="text" id="cardName" class="form-control" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="cardNumber">Card Number:</label>
+                            <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiry">Expiry Date:</label>
+                                <input type="text" id="expiry" class="form-control" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV:</label>
+                                <input type="text" id="cvv" class="form-control" placeholder="123" maxlength="3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="payNowBtn" class="btn btn-success btn-full">💳 Pay Now</button>
+                    <p class="payment-note">🔒 Your payment information is secure and encrypted</p>
+                </div>
+
+                <!-- Booking Confirmation (Hidden by default) -->
+                <div id="confirmationSection" class="confirmation-section" style="display: none;">
+                    <h3>✅ Booking Confirmed!</h3>
+                    <div class="confirmation-details">
+                        <p><strong>Booking ID:</strong> <span id="confirmBookingId"></span></p>
+                        <p><strong>Station:</strong> <span id="confirmStation"></span></p>
+                        <p><strong>Date & Time:</strong> <span id="confirmDateTime"></span></p>
+                        <p><strong>Duration:</strong> <span id="confirmDuration"></span> hours</p>
+                        <p><strong>Amount Paid:</strong> $<span id="confirmAmount"></span></p>
+                        <p><strong>Status:</strong> <span class="status-badge confirmed">Confirmed</span></p>
+                    </div>
+                    <div class="confirmation-actions">
+                        <button id="viewBookingsBtn" class="btn btn-primary">📋 View My Bookings</button>
+                        <button id="newSearchBtn" class="btn btn-secondary">🔍 New Search</button>
+                    </div>
+                </div>
+
+                <!-- My Bookings (Hidden by default) -->
+                <div id="bookingsSection" class="bookings-section" style="display: none;">
+                    <button id="closeBookingsBtn" class="close-btn">✕</button>
+                    <h3>My Bookings</h3>
+                    <div id="bookingsList" class="bookings-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
