@@ -156,20 +156,6 @@ with col2:
 
 st.markdown("---")
 
-# Correlation heatmap
-st.subheader("🔗 Correlation Matrix")
-corr_matrix = df.corr(numeric_only=True)
-fig_corr = px.imshow(
-    corr_matrix,
-    title="Feature Correlation",
-    color_continuous_scale="RdBu",
-    zmin=-1,
-    zmax=1
-)
-st.plotly_chart(fig_corr, use_container_width=True)
-
-st.markdown("---")
-
 # ================== MACHINE LEARNING ==================
 st.header("🤖 Machine Learning Model")
 
@@ -306,7 +292,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.write("**🌡️ Temperature Risk:**")
     st.progress(min(temp_risk / 100, 1.0))
-    st.caption(f"{temp}°C / Safe range: 20-85°C")
+    st.caption(f"{temp}°C / Safe range: 0-85°C")
 
 with col2:
     st.write("**📳 Vibration Risk:**")
