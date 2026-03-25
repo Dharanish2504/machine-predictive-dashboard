@@ -192,10 +192,10 @@ model, X_test, y_test, predictions = train_model()
 # Model metrics
 col1, col2, col3, col4 = st.columns(4)
 
-accuracy = 1.0  # 100%
-precision = 1.0  # 100%
-recall = 1.0  # 100%
-f1 = 1.0  # 100%
+accuracy = accuracy_score(y_test, predictions)
+precision = precision_score(y_test, predictions)
+recall = recall_score(y_test, predictions)
+f1 = f1_score(y_test, predictions)
 
 with col1:
     st.metric("Accuracy", f"{accuracy:.2%}")
