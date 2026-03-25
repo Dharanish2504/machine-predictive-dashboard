@@ -48,7 +48,7 @@ with col4:
 st.markdown("---")
 
 # Missing values
-st.subheader("❓ Missing Values")
+st.subheader(" Missing Values")
 missing = df.isnull().sum()
 if missing.sum() == 0:
     st.success("✅ No missing values found!")
@@ -273,22 +273,64 @@ if runtime > 8000:
     threshold_exceeded = True
     alert_messages.append(f"⏱️ Runtime Hours: {runtime}h (Threshold: >8000h)")
 
-# Show alerts if thresholds are exceeded or model predicts failure
-if result == 1 or threshold_exceeded:
+# Show alerts ONLY if thresholds are exceeded
+if threshold_exceeded:
     st.error("🚨 ALERT: Machine may fail soon!")
     st.warning("⚠️ Recommended Action: Schedule maintenance immediately")
-    
-    if threshold_exceeded:
-        st.subheader("⚠️ Parameters Exceeding Safe Thresholds:")
-        for msg in alert_messages:
-            st.warning(msg)
+    st.subheader("⚠️ Parameters Exceeding Safe Thresholds:")
+    for msg in alert_messages:
+        st.warning(msg)
 else:
     st.success("✅ Machine is operating normally")
-    st.info("ℹ️ Continue regular monitoring")
+    st.info("ℹ️ All parameters are within safe operating ranges")
 
 # Prediction probability
 prob = model.predict_proba(sample)
 st.metric("Failure Probability", f"{prob[0][1]:.2%}")
 
 st.markdown("---")
-st.text("Dashboard created with Streamlit • Data-driven Predictive Maintenance")
+
+# Failure Probability Analysis
+st.subheader("📊 Failure Probability Analysis")
+
+# Calculate risk scores for each parameter
+temp_risk = (temp - 60) / (100 - 60) * 100 if temp > 60 else 0
+vib_risk = (vib / 1.5) * 100 if vib > 0 else 0
+press_risk = (press / 100) * 100 if press > 0 else 0
+humid_risk = (humid / 100) * 100 if humid > 0 else 0
+runtime_risk = (runtime / 10000) * 100 if runtime > 0 else 0
+
+# Display risk breakdown
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.write("**🌡️ Temperature Risk:**")
+    st.progress(min(temp_risk / 100, 1.0))
+    st.caption(f"{temp}°C / Safe range: 20-85°C")
+
+with col2:
+    st.write("**📳 Vibration Risk:**")
+    st.progress(min(vib_risk / 100, 1.0))
+    st.caption(f"{vib} / Safe range: 0-0.8")
+
+with col3:
+    st.write("**🔧 Pressure Risk:**")
+    st.progress(min(press_risk / 100, 1.0))
+    st.caption(f"{press} / Safe range: 0-70")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.write("**💧 Humidity Risk:**")
+    st.progress(min(humid_risk / 100, 1.0))
+    st.caption(f"{humid}% / Safe range: 0-80%")
+
+with col2:
+    st.write("**⏱️ Runtime Hours Risk:**")
+    st.progress(min(runtime_risk / 100, 1.0))
+    st.caption(f"{runtime}h / Safe range: 0-8000h")
+
+# Feature Importance Explanation
+st.markdown("---")
+
+
